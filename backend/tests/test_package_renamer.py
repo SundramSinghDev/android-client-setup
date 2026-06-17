@@ -79,6 +79,6 @@ def test_works_with_kotlin_source_dir():
 def test_raises_when_java_root_missing():
     from package_renamer import rename_package
     with tempfile.TemporaryDirectory() as d:
-        # No java directory — just an empty project root
-        with pytest.raises(FileNotFoundError, match="Source directory not found"):
+        # Empty project root — no module dir at all
+        with pytest.raises(FileNotFoundError, match="No Android module directory found"):
             rename_package(d, "com.example.old", "com.newclient.app")

@@ -1,6 +1,7 @@
 import shutil
 from pathlib import Path
 from image_utils import resize_icon_to_all_densities
+from project_utils import find_module_dir
 
 # Drawable resource name used for the header logo in the base repo.
 # Verify this against the 4 layout files before first use:
@@ -19,16 +20,18 @@ SCREEN_LOGO_DRAWABLES = {
 
 
 def replace_google_services(project_dir: str, gsj_source: str | None) -> None:
-    """Overwrite app/google-services.json if a replacement is provided."""
+    """Overwrite {module}/google-services.json if a replacement is provided."""
     if gsj_source is None:
         return
-    dest = Path(project_dir) / "app" / "google-services.json"
+    module_dir = find_module_dir(project_dir)
+    dest = module_dir / "google-services.json"
     shutil.copy2(gsj_source, dest)
 
 
 def replace_app_icon(project_dir: str, icon_source: str) -> None:
     """Resize icon and overwrite ic_launcher / ic_launcher_round in all mipmap-* folders."""
-    res_dir = Path(project_dir) / "app" / "src" / "main" / "res"
+    module_dir = find_module_dir(project_dir)
+    res_dir = module_dir / "src" / "main" / "res"
     sized = resize_icon_to_all_densities(icon_source)
     for folder_name, (launcher_img, round_img) in sized.items():
         folder = res_dir / folder_name
@@ -49,7 +52,8 @@ def replace_header_logo(
     Valid keys: "userprofile", "account_details", "login", "otp".
     If None, logo_source is used for all screens (overwrites one shared file).
     """
-    drawable_dir = Path(project_dir) / "app" / "src" / "main" / "res" / "drawable"
+    module_dir = find_module_dir(project_dir)
+    drawable_dir = module_dir / "src" / "main" / "res" / "drawable"
 
     if per_screen:
         for screen_key, logo_path in per_screen.items():

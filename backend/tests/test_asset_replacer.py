@@ -36,7 +36,7 @@ def test_google_services_json_replaced():
     from asset_replacer import replace_google_services
     with tempfile.TemporaryDirectory() as d:
         app_dir = Path(d) / "app"
-        app_dir.mkdir()
+        (app_dir / "src" / "main").mkdir(parents=True)
         orig = app_dir / "google-services.json"
         orig.write_text('{"original": true}')
 

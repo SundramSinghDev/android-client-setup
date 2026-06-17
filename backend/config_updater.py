@@ -1,13 +1,13 @@
 import html
 import re
 from pathlib import Path
+from project_utils import find_module_dir
 
 
 def update_app_name(project_dir: str, app_name: str) -> None:
     """Replace app_name value in res/values/strings.xml."""
-    strings_xml = (
-        Path(project_dir) / "app" / "src" / "main" / "res" / "values" / "strings.xml"
-    )
+    module_dir = find_module_dir(project_dir)
+    strings_xml = module_dir / "src" / "main" / "res" / "values" / "strings.xml"
     content = strings_xml.read_text(encoding="utf-8")
     updated, count = re.subn(
         r'(<string name="app_name">)[^<]*(</string>)',
@@ -58,6 +58,7 @@ def update_urls_kt(
 
 
 def _find_urls_kt(project_path: Path) -> Path:
-    for f in (project_path / "app" / "src").rglob("Urls.kt"):
+    module_dir = find_module_dir(project_path)
+    for f in (module_dir / "src").rglob("Urls.kt"):
         return f
-    raise FileNotFoundError("Urls.kt not found under app/src/")
+    raise FileNotFoundError(f"Urls.kt not found under {module_dir}/src/")
