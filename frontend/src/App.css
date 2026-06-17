@@ -30,6 +30,29 @@
 }
 .section:last-child { border-bottom: none; }
 
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-header .section-title { margin-bottom: 0; }
+
+.fill-test-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.fill-test-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
 .section-title {
   font-size: 11px;
   font-weight: 700;

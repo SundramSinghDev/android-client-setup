@@ -16,6 +16,18 @@ const API_FIELDS = [
 
 const ALL_TEXT_FIELDS = [...TEXT_FIELDS_TOP, ...API_FIELDS]
 
+const EMPTY_VALUES = Object.fromEntries(ALL_TEXT_FIELDS.map(f => [f.name, '']))
+
+const TEST_DATA = {
+  project_name: 'test project',
+  mid: '18',
+  package_name: 'com.test.app',
+  app_name: 'Test Project',
+  shop_domain: 'magenative.myshopify.com',
+  api_key: 'c572b018c17d62853985e19b2b11a9a4',
+  access_token: '31fc1f41196628610bef9a4c73e2949c',
+}
+
 const PER_SCREEN_SLOTS = [
   { name: 'logo_userprofile',    label: 'User Profile' },
   { name: 'logo_account_details',label: 'Account Details' },
@@ -47,6 +59,11 @@ export default function ClientForm({ onStatusChange }) {
   const [perScreen, setPerScreen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(true)
+  const [values, setValues] = useState(EMPTY_VALUES)
+
+  function setField(name, value) {
+    setValues(v => ({ ...v, [name]: value }))
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -56,7 +73,7 @@ export default function ClientForm({ onStatusChange }) {
     const form = e.target
     const data = new FormData()
 
-    ALL_TEXT_FIELDS.forEach(({ name }) => data.append(name, form[name].value))
+    ALL_TEXT_FIELDS.forEach(({ name }) => data.append(name, values[name]))
     data.append('preview_visible', String(previewVisible))
     data.append('app_icon', form.app_icon.files[0])
     data.append('header_logo', form.header_logo.files[0])
@@ -86,12 +103,18 @@ export default function ClientForm({ onStatusChange }) {
 
       {/* Project Details */}
       <div className="section">
-        <p className="section-title">Project Details</p>
+        <div className="section-header">
+          <p className="section-title">Project Details</p>
+          <button type="button" className="fill-test-btn" onClick={() => setValues(TEST_DATA)}>
+            Fill test data
+          </button>
+        </div>
         <div className="field-row">
           {TEXT_FIELDS_TOP.slice(0, 2).map(({ label, name, placeholder }) => (
             <div className="field" key={name}>
               <span className="label">{label}</span>
-              <input className="input" name={name} placeholder={placeholder} required />
+              <input className="input" name={name} placeholder={placeholder} required
+                value={values[name]} onChange={e => setField(name, e.target.value)} />
             </div>
           ))}
         </div>
@@ -99,7 +122,8 @@ export default function ClientForm({ onStatusChange }) {
           {TEXT_FIELDS_TOP.slice(2).map(({ label, name, placeholder }) => (
             <div className="field" key={name}>
               <span className="label">{label}</span>
-              <input className="input" name={name} placeholder={placeholder} required />
+              <input className="input" name={name} placeholder={placeholder} required
+                value={values[name]} onChange={e => setField(name, e.target.value)} />
             </div>
           ))}
         </div>
@@ -111,7 +135,8 @@ export default function ClientForm({ onStatusChange }) {
         {API_FIELDS.map(({ label, name, placeholder }) => (
           <div className="field" key={name}>
             <span className="label">{label}</span>
-            <input className="input" name={name} placeholder={placeholder} required />
+            <input className="input" name={name} placeholder={placeholder} required
+              value={values[name]} onChange={e => setField(name, e.target.value)} />
           </div>
         ))}
         <div className="field" style={{ marginTop: 14 }}>
