@@ -1,3 +1,5 @@
+import os
+import shutil
 import subprocess
 from github import Github, GithubException, UnknownObjectException
 
@@ -49,12 +51,13 @@ def push_to_github(project_dir: str, repo_url: str, token: str) -> None:
     Token is injected into the HTTPS URL for auth.
     """
     auth_url = repo_url.replace("https://", f"https://{token}@")
+    shutil.rmtree(os.path.join(project_dir, ".git"), ignore_errors=True)
     commands = [
         ["git", "init"],
         ["git", "add", "."],
         ["git", "commit", "-m", "feat: initial client project setup"],
         ["git", "branch", "-M", "main"],
-        ["git", "remote", "set-url", "origin", auth_url],
+        ["git", "remote", "add", "origin", auth_url],
         ["git", "push", "-u", "origin", "main"],
     ]
     for cmd in commands:
