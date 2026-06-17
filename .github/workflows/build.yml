@@ -31,6 +31,10 @@ jobs:
         id: apk
         run: |
           path=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          if [ -z "$path" ]; then
+            echo "ERROR: No APK found in app/build/outputs/apk/release/"
+            exit 1
+          fi
           echo "path=$path" >> $GITHUB_OUTPUT
 
       - name: Set up Python
@@ -54,7 +58,10 @@ jobs:
 
       - name: Notify on failure
         if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            console.log('Build failed for', context.repo.repo)
+        run: python .github/scripts/upload_and_notify.py --failure
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          REPO_NAME: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

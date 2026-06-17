@@ -1,4 +1,5 @@
 # .github/scripts/upload_and_notify.py
+import argparse
 import json
 import os
 import smtplib
@@ -36,17 +37,45 @@ def send_email(to: str, user: str, password: str, link: str, repo: str) -> None:
         smtp.send_message(msg)
 
 
+def send_failure_email(to: str, user: str, password: str, repo: str, run_url: str) -> None:
+    msg = MIMEText(
+        f"The release build failed. Check the Actions log at {run_url}"
+    )
+    msg["Subject"] = f"Build failed: {repo}"
+    msg["From"] = user
+    msg["To"] = to
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(user, password)
+        smtp.send_message(msg)
+
+
 if __name__ == "__main__":
-    apk = os.environ["APK_PATH"]
-    link = upload_to_drive(
-        apk, os.environ["GOOGLE_DRIVE_FOLDER_ID"], os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
-    )
-    print(f"Uploaded: {link}")
-    send_email(
-        os.environ["NOTIFY_EMAIL"],
-        os.environ["GMAIL_USER"],
-        os.environ["GMAIL_APP_PASSWORD"],
-        link,
-        os.environ["REPO_NAME"],
-    )
-    print("Email sent.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--failure", action="store_true", help="Send failure notification email only")
+    args = parser.parse_args()
+
+    if args.failure:
+        repo = os.environ["REPO_NAME"]
+        run_url = os.environ["RUN_URL"]
+        send_failure_email(
+            os.environ["NOTIFY_EMAIL"],
+            os.environ["GMAIL_USER"],
+            os.environ["GMAIL_APP_PASSWORD"],
+            repo,
+            run_url,
+        )
+        print("Failure email sent.")
+    else:
+        apk = os.environ["APK_PATH"]
+        link = upload_to_drive(
+            apk, os.environ["GOOGLE_DRIVE_FOLDER_ID"], os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
+        )
+        print(f"Uploaded: {link}")
+        send_email(
+            os.environ["NOTIFY_EMAIL"],
+            os.environ["GMAIL_USER"],
+            os.environ["GMAIL_APP_PASSWORD"],
+            link,
+            os.environ["REPO_NAME"],
+        )
+        print("Email sent.")
