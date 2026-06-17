@@ -43,12 +43,13 @@ test.describe('Page structure', () => {
   })
 
   test('renders app_icon and header_logo file inputs', async ({ page }) => {
-    await expect(page.locator('input[name="app_icon"]')).toBeVisible()
-    await expect(page.locator('input[name="header_logo"]')).toBeVisible()
+    // File inputs are visually hidden inside styled label wrappers — check the wrapper
+    await expect(page.locator('.file-label').filter({ has: page.locator('input[name="app_icon"]') })).toBeVisible()
+    await expect(page.locator('.file-label').filter({ has: page.locator('input[name="header_logo"]') })).toBeVisible()
   })
 
   test('renders google_services_json file input', async ({ page }) => {
-    await expect(page.locator('input[name="google_services_json"]')).toBeVisible()
+    await expect(page.locator('.file-label').filter({ has: page.locator('input[name="google_services_json"]') })).toBeVisible()
   })
 
   test('renders the submit button', async ({ page }) => {
@@ -91,19 +92,20 @@ test.describe('Per-screen logo toggle', () => {
     await expect(page.locator('input[name="logo_otp"]')).not.toBeVisible()
   })
 
-  test('toggling "Different logo per screen?" reveals all 4 slots', async ({ page }) => {
-    await page.getByLabel('Different logo per screen?').check()
-    await expect(page.locator('input[name="logo_userprofile"]')).toBeVisible()
-    await expect(page.locator('input[name="logo_account_details"]')).toBeVisible()
-    await expect(page.locator('input[name="logo_login"]')).toBeVisible()
-    await expect(page.locator('input[name="logo_otp"]')).toBeVisible()
+  test('toggling "Use different logo per screen" reveals all 4 slots', async ({ page }) => {
+    await page.getByLabel('Use different logo per screen').check()
+    // Slots revealed — check wrapper labels (inputs are visually hidden inside them)
+    await expect(page.locator('.file-label').filter({ has: page.locator('input[name="logo_userprofile"]') })).toBeVisible()
+    await expect(page.locator('.file-label').filter({ has: page.locator('input[name="logo_account_details"]') })).toBeVisible()
+    await expect(page.locator('.file-label').filter({ has: page.locator('input[name="logo_login"]') })).toBeVisible()
+    await expect(page.locator('.file-label').filter({ has: page.locator('input[name="logo_otp"]') })).toBeVisible()
   })
 
   test('untoggling hides the per-screen slots again', async ({ page }) => {
-    const toggle = page.getByLabel('Different logo per screen?')
+    const toggle = page.getByLabel('Use different logo per screen')
     await toggle.check()
     await toggle.uncheck()
-    await expect(page.locator('input[name="logo_userprofile"]')).not.toBeVisible()
+    await expect(page.locator('.per-screen-grid')).not.toBeVisible()
   })
 })
 
@@ -135,8 +137,8 @@ test.describe('Form submission — success', () => {
 
     await fillRequiredFields(page)
     const submitPromise = page.getByRole('button', { name: 'Create Client Project' }).click()
-    await expect(page.getByRole('button', { name: 'Creating…' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Creating…' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Creating project…' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Creating project…' })).toBeDisabled()
     resolveRequest()
     await submitPromise
   })
@@ -220,7 +222,7 @@ test.describe('Per-screen logo submission', () => {
     })
     await page.goto('/')
     await fillRequiredFields(page)
-    await page.getByLabel('Different logo per screen?').check()
+    await page.getByLabel('Use different logo per screen').check()
     await page.locator('input[name="logo_login"]').setInputFiles(PNG_FILE)
     await page.getByRole('button', { name: 'Create Client Project' }).click()
     await expect(page.getByText('ok', { exact: true })).toBeVisible()
