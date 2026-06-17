@@ -12,6 +12,9 @@ def rename_package(project_dir: str, old_package: str, new_package: str) -> None
     root = Path(project_dir)
     java_root = root / "app" / "src" / "main" / "java"
 
+    if not java_root.exists():
+        raise FileNotFoundError(f"Java source directory not found: {java_root}")
+
     # 1. Replace string in all .kt files
     for kt_file in java_root.rglob("*.kt"):
         _replace_in_file(kt_file, old_package, new_package)

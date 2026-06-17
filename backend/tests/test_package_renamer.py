@@ -57,3 +57,11 @@ def test_directory_structure_renamed():
         rename_package(d, "com.example.old", "com.newclient.app")
         assert (Path(d) / "app/src/main/java/com/newclient/app").exists()
         assert not (Path(d) / "app/src/main/java/com/example/old").exists()
+
+
+def test_raises_when_java_root_missing():
+    from package_renamer import rename_package
+    with tempfile.TemporaryDirectory() as d:
+        # No java directory — just an empty project root
+        with pytest.raises(FileNotFoundError, match="Java source directory not found"):
+            rename_package(d, "com.example.old", "com.newclient.app")
