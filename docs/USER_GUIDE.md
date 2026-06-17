@@ -206,9 +206,29 @@ Press `Ctrl+C` in each terminal window.
 
 ## Running Tests
 
+### Backend
+
 ```bash
 cd backend
 python -m pytest tests/ -v
 ```
 
-Expected: 45 tests pass.
+Expected: 45 tests pass across 6 modules (image_utils, asset_replacer, config_updater, github_api, package_renamer, main).
+
+### Frontend (Playwright E2E)
+
+The E2E tests start the Vite dev server automatically — no need to start it manually.
+
+```bash
+cd frontend
+npx playwright test
+```
+
+Expected: 20 tests pass covering form rendering, toggles, file uploads, submit success/error states, and multipart field names.
+
+To run with an interactive browser UI (useful for debugging):
+
+```bash
+cd frontend
+npx playwright test --ui
+```
