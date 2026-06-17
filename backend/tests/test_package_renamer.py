@@ -59,9 +59,26 @@ def test_directory_structure_renamed():
         assert not (Path(d) / "app/src/main/java/com/example/old").exists()
 
 
+def test_works_with_kotlin_source_dir():
+    from package_renamer import rename_package
+    with tempfile.TemporaryDirectory() as d:
+        # Use kotlin/ instead of java/
+        pkg_path = Path(d) / "app/src/main/kotlin/com/example/old"
+        pkg_path.mkdir(parents=True)
+        (pkg_path / "MainActivity.kt").write_text("package com.example.old\n")
+        (Path(d) / "app/src/main/AndroidManifest.xml").parent.mkdir(parents=True, exist_ok=True)
+        (Path(d) / "app/src/main/AndroidManifest.xml").write_text('<manifest package="com.example.old">')
+        (Path(d) / "app/build.gradle").parent.mkdir(parents=True, exist_ok=True)
+        (Path(d) / "app/build.gradle").write_text('applicationId "com.example.old"')
+        rename_package(d, "com.example.old", "com.newclient.app")
+        kt = Path(d) / "app/src/main/kotlin/com/newclient/app/MainActivity.kt"
+        assert kt.exists()
+        assert "com.newclient.app" in kt.read_text()
+
+
 def test_raises_when_java_root_missing():
     from package_renamer import rename_package
     with tempfile.TemporaryDirectory() as d:
         # No java directory — just an empty project root
-        with pytest.raises(FileNotFoundError, match="Java source directory not found"):
+        with pytest.raises(FileNotFoundError, match="Source directory not found"):
             rename_package(d, "com.example.old", "com.newclient.app")

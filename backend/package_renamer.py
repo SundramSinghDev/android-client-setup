@@ -10,10 +10,15 @@ def rename_package(project_dir: str, old_package: str, new_package: str) -> None
     and renames the source directory tree.
     """
     root = Path(project_dir)
-    java_root = root / "app" / "src" / "main" / "java"
-
-    if not java_root.exists():
-        raise FileNotFoundError(f"Java source directory not found: {java_root}")
+    src_main = root / "app" / "src" / "main"
+    java_root = next(
+        (src_main / d for d in ("java", "kotlin") if (src_main / d).exists()),
+        None,
+    )
+    if java_root is None:
+        raise FileNotFoundError(
+            f"Source directory not found: expected 'java' or 'kotlin' under {src_main}"
+        )
 
     # 1. Replace string in all .kt files
     for kt_file in java_root.rglob("*.kt"):
