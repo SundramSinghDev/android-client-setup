@@ -27,8 +27,10 @@ python -m pytest tests/test_foo.py::test_name -v  # run one test
 **Frontend**
 ```bash
 cd frontend
-npm install      # install deps
-npm run dev      # start dev server at localhost:5173
+npm install                # install deps
+npm run dev                # start dev server at localhost:5173
+npx playwright test        # run E2E tests (starts dev server automatically)
+npx playwright test --ui   # run E2E tests with interactive UI
 ```
 
 ## Running the Backend
@@ -49,12 +51,21 @@ npm run dev
 
 ## Running Tests
 
+**Backend**
 ```bash
 cd backend
 python -m pytest tests/ -v
 ```
 
-Expected: 42 tests pass (3 image_utils, 5 asset_replacer, 4 config_updater, 4 github_api, 5 package_renamer, 21 main).
+Expected: 45 tests pass (3 image_utils, 5 asset_replacer, 4 config_updater, 7 github_api, 5 package_renamer, 21 main).
+
+**Frontend (Playwright E2E)**
+```bash
+cd frontend
+npx playwright test
+```
+
+Expected: 20 tests pass (5 page structure, 3 preview toggle, 3 per-screen toggle, 6 submit success, 3 submit error, 1 per-screen submission).
 
 ## Key Constants
 
