@@ -186,11 +186,26 @@
   padding: 16px;
   border-radius: var(--radius);
   border-left: 4px solid;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 .status-panel.loading {
   background: var(--amber-light);
   border-color: var(--amber);
   color: var(--amber);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.status-spinner {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin-top: 1px;
 }
 .status-panel.success {
   background: var(--green-light);

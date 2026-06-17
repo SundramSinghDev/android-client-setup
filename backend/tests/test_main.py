@@ -14,6 +14,21 @@ from fastapi.testclient import TestClient
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _parse_sse(text: str) -> list:
+    """Return list of parsed JSON objects from an SSE response body."""
+    import json as _json
+    events = []
+    for line in text.split('\n'):
+        if line.startswith('data: '):
+            events.append(_json.loads(line[6:]))
+    return events
+
+
+def _last_sse_event(resp) -> dict:
+    events = _parse_sse(resp.text)
+    return events[-1] if events else {}
+
+
 def _fake_png_bytes() -> bytes:
     """Return a minimal 1x1 PNG so UploadFile has a real filename suffix."""
     import struct, zlib
@@ -134,7 +149,7 @@ class TestCreateClientHappyPath:
              patch("main.create_github_repo", return_value="https://github.com/org/r.git"), \
              patch("main.push_to_github"):
             resp = self._post(client)
-        assert resp.json()["status"] == "build_triggered"
+        assert _last_sse_event(resp)["status"] == "build_triggered"
 
     def test_response_contains_repo_url(self):
         client = _make_client()
@@ -148,7 +163,7 @@ class TestCreateClientHappyPath:
              patch("main.create_github_repo", return_value="https://github.com/org/MID001_acme.git"), \
              patch("main.push_to_github"):
             resp = self._post(client)
-        body = resp.json()
+        body = _last_sse_event(resp)
         assert "repo_url" in body
         assert "MID001_acme" in body["repo_url"]
 
@@ -164,7 +179,7 @@ class TestCreateClientHappyPath:
              patch("main.create_github_repo", return_value="https://github.com/org/r.git"), \
              patch("main.push_to_github"):
             resp = self._post(client)
-        assert "message" in resp.json()
+        assert "message" in _last_sse_event(resp)
 
     def test_clone_is_called(self):
         client = _make_client()
@@ -459,8 +474,10 @@ class TestCreateClientErrorHandling:
         }
         with patch("main.clone_base_repo", side_effect=RuntimeError("Clone failed: not found")):
             resp = client.post("/api/create-client", data=data, files=files)
-        assert resp.status_code == 500
-        assert "Clone failed" in resp.json()["detail"]
+        assert resp.status_code == 200
+        last = _last_sse_event(resp)
+        assert last["status"] == "error"
+        assert "Clone failed" in last["message"]
 
     def test_returns_500_when_github_push_raises(self):
         client = _make_client()
@@ -489,7 +506,8 @@ class TestCreateClientErrorHandling:
              patch("main.create_github_repo", return_value="https://github.com/org/r.git"), \
              patch("main.push_to_github", side_effect=RuntimeError("push failed")):
             resp = client.post("/api/create-client", data=data, files=files)
-        assert resp.status_code == 500
+        assert resp.status_code == 200
+        assert _last_sse_event(resp)["status"] == "error"
 
     def test_temp_dir_cleaned_up_on_error(self):
         """Verify tempfile.mkdtemp dirs are removed even when an exception occurs."""

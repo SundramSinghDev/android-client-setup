@@ -3,6 +3,7 @@ export default function StatusPanel({ status }) {
   const { state, message, repoUrl } = status
   return (
     <div className={`status-panel ${state}`}>
+      {state === 'loading' && <span className="status-spinner" />}
       <p className="status-message">{message}</p>
       {repoUrl && (
         <p className="status-link">

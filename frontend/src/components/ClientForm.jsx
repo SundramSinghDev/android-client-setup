@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import axios from 'axios'
 
 const TEXT_FIELDS_TOP = [
   { label: 'Project Name',      name: 'project_name', placeholder: 'Acme Store' },
@@ -88,11 +87,41 @@ export default function ClientForm({ onStatusChange }) {
     }
 
     try {
-      const res = await axios.post('/api/create-client', data)
-      onStatusChange({ state: 'success', message: res.data.message, repoUrl: res.data.repo_url })
+      const response = await fetch('/api/create-client', { method: 'POST', body: data })
+
+      if (!response.ok) {
+        let detail = `HTTP ${response.status}`
+        try { const err = await response.json(); detail = err.detail || detail } catch {}
+        onStatusChange({ state: 'error', message: `Error: ${detail}` })
+        return
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop()
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const event = JSON.parse(line.slice(6))
+            if (event.step) {
+              onStatusChange({ state: 'loading', message: event.step })
+            } else if (event.status === 'build_triggered') {
+              onStatusChange({ state: 'success', message: event.message, repoUrl: event.repo_url })
+            } else if (event.status === 'error') {
+              onStatusChange({ state: 'error', message: `Error: ${event.message}` })
+            }
+          } catch {}
+        }
+      }
     } catch (err) {
-      const detail = err.response?.data?.detail || err.message
-      onStatusChange({ state: 'error', message: `Error: ${detail}` })
+      onStatusChange({ state: 'error', message: `Error: ${err.message}` })
     } finally {
       setLoading(false)
     }

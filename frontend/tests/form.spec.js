@@ -114,12 +114,8 @@ test.describe('Form submission — success', () => {
     await page.route('/api/create-client', route =>
       route.fulfill({
         status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          repo_url: 'https://github.com/testorg/acme001_Acme_Store',
-          status: 'build_triggered',
-          message: 'Build triggered — APK will be emailed when ready',
-        }),
+        contentType: 'text/event-stream',
+        body: 'data: {"repo_url":"https://github.com/testorg/acme001_Acme_Store","status":"build_triggered","message":"Build triggered — APK will be emailed when ready"}\n\n',
       }),
     )
     await page.goto('/')
@@ -130,8 +126,8 @@ test.describe('Form submission — success', () => {
     await page.route('/api/create-client', route => {
       return new Promise(res => { resolveRequest = () => res(route.fulfill({
         status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ repo_url: 'https://github.com/org/repo', status: 'build_triggered', message: 'ok' }),
+        contentType: 'text/event-stream',
+        body: 'data: {"repo_url":"https://github.com/org/repo","status":"build_triggered","message":"ok"}\n\n',
       })) })
     })
 
@@ -216,8 +212,8 @@ test.describe('Per-screen logo submission', () => {
       capturedBody = route.request().postData()
       await route.fulfill({
         status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ repo_url: 'https://github.com/org/repo', status: 'build_triggered', message: 'ok' }),
+        contentType: 'text/event-stream',
+        body: 'data: {"repo_url":"https://github.com/org/repo","status":"build_triggered","message":"ok"}\n\n',
       })
     })
     await page.goto('/')
