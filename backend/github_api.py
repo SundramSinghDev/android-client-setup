@@ -54,7 +54,7 @@ def push_to_github(project_dir: str, repo_url: str, token: str) -> None:
         ["git", "add", "."],
         ["git", "commit", "-m", "feat: initial client project setup"],
         ["git", "branch", "-M", "main"],
-        ["git", "remote", "add", "origin", auth_url],
+        ["git", "remote", "set-url", "origin", auth_url],
         ["git", "push", "-u", "origin", "main"],
     ]
     for cmd in commands:
