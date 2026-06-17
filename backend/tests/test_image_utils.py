@@ -27,6 +27,8 @@ def test_each_density_has_correct_size():
             launcher, round_icon = result[folder]
             assert launcher.size == (size, size), f"{folder} launcher wrong size"
             assert round_icon.size == (size, size), f"{folder} round wrong size"
+            assert launcher.mode == "RGBA", f"{folder} launcher not RGBA"
+            assert round_icon.mode == "RGBA", f"{folder} round not RGBA"
 
 
 def test_non_square_source_still_produces_correct_sizes():

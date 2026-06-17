@@ -13,8 +13,10 @@ def resize_icon_to_all_densities(source_path: str) -> dict:
     """
     Resize a source image to all Android mipmap densities.
 
-    Returns dict of {folder_name: (launcher_img, round_img)}
-    where each value is a tuple of PIL Image objects (RGBA).
+    Returns dict of {folder_name: (launcher_img, round_img)} where both
+    images are resized PIL Image objects (RGBA). They start identical so
+    the caller can save ic_launcher.png and ic_launcher_round.png independently,
+    and apply different transforms (e.g. circular crop) if needed.
     """
     source = Image.open(source_path).convert("RGBA")
     result = {}
