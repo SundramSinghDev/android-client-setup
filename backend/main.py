@@ -65,10 +65,10 @@ async def create_client(
         clone_base_repo(BASE_ANDROID_REPO_URL, project_dir)
 
         # 2. Save uploads to disk
-        icon_path = _save_upload(app_icon, assets_dir, "icon")
-        logo_path = _save_upload(header_logo, assets_dir, "header_logo")
+        icon_path = await _save_upload(app_icon, assets_dir, "icon")
+        logo_path = await _save_upload(header_logo, assets_dir, "header_logo")
         gsj_path = (
-            _save_upload(google_services_json, assets_dir, "google-services")
+            await _save_upload(google_services_json, assets_dir, "google-services")
             if google_services_json and google_services_json.filename
             else None
         )
@@ -80,7 +80,7 @@ async def create_client(
             ("otp", logo_otp),
         ]:
             if upload and upload.filename:
-                per_screen[key] = _save_upload(upload, assets_dir, f"logo_{key}")
+                per_screen[key] = await _save_upload(upload, assets_dir, f"logo_{key}")
 
         # 3. Apply all substitutions
         rename_package(project_dir, BASE_PACKAGE_NAME, package_name)
@@ -95,8 +95,8 @@ async def create_client(
         push_to_github(project_dir, repo_url, GITHUB_TOKEN)
 
         return {
-            "status": "success",
-            "repo_url": f"https://github.com/{GITHUB_ORG}/{repo_name}",
+            "status": "build_triggered",
+            "repo_url": repo_url,
             "message": "Project created. Build triggered — APK will be emailed when ready.",
         }
 
@@ -107,9 +107,9 @@ async def create_client(
         shutil.rmtree(work_dir, ignore_errors=True)
 
 
-def _save_upload(upload: UploadFile, dest_dir: str, name: str) -> str:
+async def _save_upload(upload: UploadFile, dest_dir: str, name: str) -> str:
     suffix = Path(upload.filename).suffix or ".bin"
     dest = os.path.join(dest_dir, f"{name}{suffix}")
     with open(dest, "wb") as f:
-        f.write(upload.file.read())
+        f.write(await upload.read())
     return dest

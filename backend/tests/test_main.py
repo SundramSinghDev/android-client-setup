@@ -134,7 +134,7 @@ class TestCreateClientHappyPath:
              patch("main.create_github_repo", return_value="https://github.com/org/r.git"), \
              patch("main.push_to_github"):
             resp = self._post(client)
-        assert resp.json()["status"] == "success"
+        assert resp.json()["status"] == "build_triggered"
 
     def test_response_contains_repo_url(self):
         client = _make_client()
@@ -145,7 +145,7 @@ class TestCreateClientHappyPath:
              patch("main.replace_google_services"), \
              patch("main.replace_app_icon"), \
              patch("main.replace_header_logo"), \
-             patch("main.create_github_repo", return_value="https://github.com/org/r.git"), \
+             patch("main.create_github_repo", return_value="https://github.com/org/MID001_acme.git"), \
              patch("main.push_to_github"):
             resp = self._post(client)
         body = resp.json()
