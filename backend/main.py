@@ -67,7 +67,7 @@ async def create_client(
         os.makedirs(assets_dir)
 
         # 1. Clone
-        clone_base_repo(BASE_ANDROID_REPO_URL, project_dir)
+        clone_base_repo(BASE_ANDROID_REPO_URL, project_dir, token=GITHUB_TOKEN)
 
         # 2. Save uploads to disk
         icon_path = await _save_upload(app_icon, assets_dir, "icon")

@@ -16,12 +16,44 @@ def test_clone_base_repo_calls_git_clone():
         assert "/tmp/dest" in args
 
 
+def test_clone_injects_token_for_private_repo():
+    from github_api import clone_base_repo
+    captured_urls = []
+    def fake_run(cmd, **kwargs):
+        captured_urls.append(cmd[3])  # url is the 4th arg: git clone --depth=1 <url> <dest>
+        return MagicMock(returncode=0, stderr="")
+    with patch("github_api.subprocess.run", side_effect=fake_run):
+        clone_base_repo("https://github.com/org/private.git", "/tmp/dest", token="MYTOKEN")
+    assert captured_urls[0] == "https://MYTOKEN@github.com/org/private.git"
+
+
+def test_clone_without_token_uses_url_as_is():
+    from github_api import clone_base_repo
+    captured_urls = []
+    def fake_run(cmd, **kwargs):
+        captured_urls.append(cmd[3])
+        return MagicMock(returncode=0, stderr="")
+    with patch("github_api.subprocess.run", side_effect=fake_run):
+        clone_base_repo("https://github.com/org/repo.git", "/tmp/dest")
+    assert captured_urls[0] == "https://github.com/org/repo.git"
+
+
 def test_clone_raises_on_failure():
     from github_api import clone_base_repo
     with patch("github_api.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=128, stderr="fatal: not found")
         with pytest.raises(RuntimeError, match="Clone failed"):
             clone_base_repo("https://github.com/org/bad.git", "/tmp/dest")
+
+
+def test_clone_masks_token_in_error_message():
+    from github_api import clone_base_repo
+    with patch("github_api.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=128, stderr="fatal: repo not found at https://SECRETTOKEN@github.com/org/repo.git")
+        with pytest.raises(RuntimeError) as exc_info:
+            clone_base_repo("https://github.com/org/repo.git", "/tmp/dest", token="SECRETTOKEN")
+        assert "SECRETTOKEN" not in str(exc_info.value)
+        assert "***" in str(exc_info.value)
 
 
 def test_push_to_github_runs_git_sequence():

@@ -2,14 +2,19 @@ import subprocess
 from github import Github, GithubException, UnknownObjectException
 
 
-def clone_base_repo(repo_url: str, dest_dir: str) -> None:
+def clone_base_repo(repo_url: str, dest_dir: str, token: str | None = None) -> None:
     """Clone the base Android repo (shallow) into dest_dir."""
+    if token and repo_url.startswith("https://"):
+        auth_url = repo_url.replace("https://", f"https://{token}@")
+    else:
+        auth_url = repo_url
     result = subprocess.run(
-        ["git", "clone", "--depth=1", repo_url, dest_dir],
+        ["git", "clone", "--depth=1", auth_url, dest_dir],
         capture_output=True, text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(f"Clone failed: {result.stderr}")
+        safe_stderr = result.stderr.replace(token, "***") if token else result.stderr
+        raise RuntimeError(f"Clone failed: {safe_stderr}")
 
 
 def create_github_repo(token: str, org: str, repo_name: str) -> str:
