@@ -51,7 +51,7 @@ npm run dev
 
 ```bash
 cd backend
-pytest tests/ -v
+python -m pytest tests/ -v
 ```
 
 Expected: 42 tests pass (3 image_utils, 5 asset_replacer, 4 config_updater, 4 github_api, 5 package_renamer, 21 main).
@@ -84,7 +84,7 @@ These must be updated to match the base Android repo before first use:
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in:
+Copy `.env.example` to `.env` and fill in the values before starting the backend:
 
 | Variable | Description |
 |---|---|
@@ -106,3 +106,17 @@ Copy `.env.example` to `.env` and fill in:
 ## Architecture Reference
 
 See `docs/superpowers/specs/2026-06-16-client-project-automation-design.md` for the full design spec.
+
+## First-Run E2E Verification
+
+After setting up all credentials in `.env`:
+
+1. Start the backend: `cd backend && uvicorn main:app --reload --port 8000`
+2. Start the frontend: `cd frontend && npm run dev`
+3. Open `http://localhost:5173`, fill in all fields with test values, upload a test PNG icon and logo, and submit.
+4. Expected sequence:
+   - Status panel shows "Creating project…"
+   - Backend logs show: clone → substitutions → GitHub push
+   - Status panel shows success with repo URL
+   - New GitHub repo exists at `https://github.com/{GITHUB_ORG}/{mid}_{project_name}`
+   - GitHub Actions workflow starts, builds APK, uploads to Drive, emails link
