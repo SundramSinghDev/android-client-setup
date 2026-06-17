@@ -48,3 +48,41 @@ def test_push_injects_token_into_url():
         with patch("github_api.subprocess.run", side_effect=fake_run):
             push_to_github(d, "https://github.com/org/repo.git", "MYTOKEN")
     assert any("MYTOKEN@" in url for url in captured_urls)
+
+
+def test_create_github_repo_uses_org():
+    from github_api import create_github_repo
+    mock_repo = MagicMock()
+    mock_repo.clone_url = "https://github.com/org/repo.git"
+    mock_org = MagicMock()
+    mock_org.create_repo.return_value = mock_repo
+    with patch("github_api.Github") as MockGithub:
+        MockGithub.return_value.get_organization.return_value = mock_org
+        url = create_github_repo("token", "myorg", "myrepo")
+    assert url == "https://github.com/org/repo.git"
+    mock_org.create_repo.assert_called_once_with("myrepo", private=True, auto_init=False)
+
+
+def test_create_github_repo_falls_back_to_user_on_404():
+    from github import UnknownObjectException
+    from github_api import create_github_repo
+    mock_repo = MagicMock()
+    mock_repo.clone_url = "https://github.com/user/repo.git"
+    mock_user = MagicMock()
+    mock_user.create_repo.return_value = mock_repo
+    with patch("github_api.Github") as MockGithub:
+        instance = MockGithub.return_value
+        instance.get_organization.side_effect = UnknownObjectException(404, "Not Found", {})
+        instance.get_user.return_value = mock_user
+        url = create_github_repo("token", "nonexistentorg", "myrepo")
+    assert url == "https://github.com/user/repo.git"
+
+
+def test_create_github_repo_does_not_fallback_on_auth_error():
+    from github import GithubException
+    from github_api import create_github_repo
+    with patch("github_api.Github") as MockGithub:
+        instance = MockGithub.return_value
+        instance.get_organization.side_effect = GithubException(401, "Unauthorized", {})
+        with pytest.raises(GithubException):
+            create_github_repo("bad_token", "myorg", "myrepo")

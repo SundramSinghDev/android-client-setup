@@ -1,5 +1,5 @@
 import subprocess
-from github import Github, GithubException
+from github import Github, GithubException, UnknownObjectException
 
 
 def clone_base_repo(repo_url: str, dest_dir: str) -> None:
@@ -20,7 +20,7 @@ def create_github_repo(token: str, org: str, repo_name: str) -> str:
     g = Github(token)
     try:
         owner = g.get_organization(org)
-    except GithubException:
+    except UnknownObjectException:
         owner = g.get_user()
     repo = owner.create_repo(repo_name, private=True, auto_init=False)
     return repo.clone_url
@@ -44,4 +44,5 @@ def push_to_github(project_dir: str, repo_url: str, token: str) -> None:
     for cmd in commands:
         result = subprocess.run(cmd, cwd=project_dir, capture_output=True, text=True)
         if result.returncode != 0:
-            raise RuntimeError(f"`git {cmd[1]}` failed: {result.stderr}")
+            safe_stderr = result.stderr.replace(token, "***")
+            raise RuntimeError(f"`git {cmd[1]}` failed: {safe_stderr}")

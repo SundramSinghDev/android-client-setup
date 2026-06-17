@@ -1,4 +1,5 @@
 import os
+import re as _re
 import shutil
 import tempfile
 from pathlib import Path
@@ -53,7 +54,11 @@ async def create_client(
     logo_login: UploadFile | None = File(None),
     logo_otp: UploadFile | None = File(None),
 ):
-    repo_name = f"{mid}_{project_name}"
+    if not _re.match(r'^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*){2,}$', package_name):
+        raise HTTPException(status_code=422, detail="Invalid package_name: must be like com.example.app")
+
+    _repo_safe = _re.sub(r'[^a-zA-Z0-9._-]', '-', f"{mid}_{project_name}")
+    repo_name = _repo_safe
     work_dir = tempfile.mkdtemp(prefix="client_setup_")
 
     try:

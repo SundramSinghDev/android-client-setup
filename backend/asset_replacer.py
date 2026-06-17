@@ -66,5 +66,6 @@ def replace_header_logo(
 
 
 def _copy_logo(source: str, drawable_dir: Path, drawable_name: str) -> None:
+    drawable_dir.mkdir(parents=True, exist_ok=True)
     suffix = Path(source).suffix or ".png"
     shutil.copy2(source, drawable_dir / f"{drawable_name}{suffix}")

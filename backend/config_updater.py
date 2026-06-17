@@ -1,3 +1,4 @@
+import html
 import re
 from pathlib import Path
 
@@ -8,11 +9,13 @@ def update_app_name(project_dir: str, app_name: str) -> None:
         Path(project_dir) / "app" / "src" / "main" / "res" / "values" / "strings.xml"
     )
     content = strings_xml.read_text(encoding="utf-8")
-    updated = re.sub(
+    updated, count = re.subn(
         r'(<string name="app_name">)[^<]*(</string>)',
-        rf'\g<1>{app_name}\g<2>',
+        rf'\g<1>{html.escape(app_name)}\g<2>',
         content,
     )
+    if count == 0:
+        raise ValueError(f"'app_name' string not found in {strings_xml}")
     strings_xml.write_text(updated, encoding="utf-8")
 
 
@@ -35,7 +38,10 @@ def update_urls_kt(
         r'(val accessToken\s*=\s*")[^"]*(")'  : rf'\g<1>{access_token}\g<2>',
     }
     for pattern, replacement in replacements.items():
-        content = re.sub(pattern, replacement, content)
+        new_content, count = re.subn(pattern, replacement, content)
+        if count == 0:
+            raise ValueError(f"Pattern not found in Urls.kt: {pattern}")
+        content = new_content
 
     if preview_visible:
         content = content.replace(

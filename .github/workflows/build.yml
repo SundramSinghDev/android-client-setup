@@ -46,6 +46,7 @@ jobs:
         run: pip install google-api-python-client google-auth
 
       - name: Upload to Drive and send email
+        if: success()
         run: python .github/scripts/upload_and_notify.py
         env:
           APK_PATH: ${{ steps.apk.outputs.path }}
