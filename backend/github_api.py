@@ -27,7 +27,18 @@ def create_github_repo(token: str, org: str, repo_name: str) -> str:
         owner = g.get_organization(org)
     except UnknownObjectException:
         owner = g.get_user()
-    repo = owner.create_repo(repo_name, private=True, auto_init=False)
+    try:
+        repo = owner.create_repo(repo_name, private=True, auto_init=False)
+    except GithubException as e:
+        if e.status == 422 and any(
+            err.get("message") == "name already exists on this account"
+            for err in (e.data.get("errors") or [])
+        ):
+            raise RuntimeError(
+                f"A GitHub repository named '{repo_name}' already exists on this account. "
+                f"Use a different Project Name or Merchant ID."
+            ) from None
+        raise
     return repo.clone_url
 
 

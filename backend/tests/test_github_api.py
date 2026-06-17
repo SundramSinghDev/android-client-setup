@@ -110,6 +110,21 @@ def test_create_github_repo_falls_back_to_user_on_404():
     assert url == "https://github.com/user/repo.git"
 
 
+def test_create_github_repo_raises_clear_error_when_name_exists():
+    from github import GithubException
+    from github_api import create_github_repo
+    mock_org = MagicMock()
+    mock_org.create_repo.side_effect = GithubException(
+        422,
+        {"message": "Repository creation failed.", "errors": [{"message": "name already exists on this account"}]},
+        {},
+    )
+    with patch("github_api.Github") as MockGithub:
+        MockGithub.return_value.get_organization.return_value = mock_org
+        with pytest.raises(RuntimeError, match="already exists"):
+            create_github_repo("token", "myorg", "duplicate-repo")
+
+
 def test_create_github_repo_does_not_fallback_on_auth_error():
     from github import GithubException
     from github_api import create_github_repo
